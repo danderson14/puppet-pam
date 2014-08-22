@@ -19,7 +19,13 @@
 # Dependencies:
 #  None
 ############################################################
-class pam {
+class pam (
+  $pass_max_days = '180',
+  $pass_min_days = '7',
+  $pass_min_len  = '12',
+  $pass_warn_age = '7',
+
+){
   #RHEL-06-000039, RHEL-06-000040, RHEL-06-000041
   file { '/etc/passwd':
     owner => 'root',
@@ -60,10 +66,10 @@ class pam {
     lens    => 'login_defs.lns',
     incl    => '/etc/login.defs',
     changes => [
-      'set PASS_MAX_DAYS 60',
-      'set PASS_MIN_DAYS 1',
-      'set PASS_MIN_LEN 14',
-      'set PASS_WARN_AGE 7',
+      "set PASS_MAX_DAYS $pass_max_days",
+      "set PASS_MIN_DAYS $pass_min_days",
+      "set PASS_MIN_LEN $pass_min_len",
+      "set PASS_WARN_AGE $pass_warn_age",
     ],
   }
   #RHEL-06-000334, RHEL-06-000335
@@ -81,7 +87,7 @@ class pam {
       "rm system-auth/*[type='password'][module='pam_cracklib.so']/argument",
       "set system-auth/*[type='password'][module='pam_cracklib.so']/argument[1] try_first_pass",
       "set system-auth/*[type='password'][module='pam_cracklib.so']/argument[2] retry=3",
-      "set system-auth/*[type='password'][module='pam_cracklib.so']/argument[3] minlen=14",
+      "set system-auth/*[type='password'][module='pam_cracklib.so']/argument[3] minlen=$pass_min_len",
       "set system-auth/*[type='password'][module='pam_cracklib.so']/argument[4] maxrepeat=3",
       "set system-auth/*[type='password'][module='pam_cracklib.so']/argument[5] dcredit=-1",
       "set system-auth/*[type='password'][module='pam_cracklib.so']/argument[6] ucredit=-1",
