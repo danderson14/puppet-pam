@@ -98,6 +98,23 @@ class pam (
     onlyif  => "match system-auth/*[type='password'][control='required'][module='pam_cracklib.so'] size == 0",
   }
   #RHEL-06-000061, RHEL-06-000356, RHEL-06-000357
+  augeas { 'Prevent retry for after session termination':
+    # Available faillock guidance doesn't neatly drop into place on all systems
+    context => '/files/etc/pam.d',
+    changes => [
+      "ins 01 before system-auth/*[type='auth'][module='pam_unix.so']",
+      'set system-auth/01/type auth',
+      'set system-auth/01/control required',
+      'set system-auth/01/module pam_faillock.so',
+      'set system-auth/01/argument[1] preauth',
+      'set system-auth/01/argument[2] silent',
+      'set system-auth/01/argument[3] audit',
+      'set system-auth/01/argument[4] deny=3',
+      'set system-auth/01/argument[5] unlock_time=604800',
+    ],
+    onlyif  => "match system-auth/*[type='auth'][control='required'][module='pam_faillock.so'] size == 0",
+  }
+  #RHEL-06-000061, RHEL-06-000356, RHEL-06-000357
   augeas { 'Set Deny For Failed Password Attempts':
     # Available faillock guidance doesn't neatly drop into place on all systems
     context => '/files/etc/pam.d',
@@ -127,6 +144,54 @@ class pam (
       'set system-auth/01/argument[4] fail_interval=900',
     ],
     onlyif  => "match system-auth/*[type='auth'][control='[default=die]'][module='pam_faillock.so'] size == 0",
+  }
+  #RHEL-06-000061, RHEL-06-000356, RHEL-06-000357
+  augeas { 'Prevent retry for after session termination [password-auth]':
+    # Available faillock guidance doesn't neatly drop into place on all systems
+    context => '/files/etc/pam.d',
+    changes => [
+      "ins 01 before password-auth/*[type='auth'][module='pam_unix.so']",
+      'set password-auth/01/type auth',
+      'set password-auth/01/control required',
+      'set password-auth/01/module pam_faillock.so',
+      'set password-auth/01/argument[1] preauth',
+      'set password-auth/01/argument[2] silent',
+      'set password-auth/01/argument[3] audit',
+      'set password-auth/01/argument[4] deny=3',
+      'set password-auth/01/argument[5] unlock_time=604800',
+    ],
+    onlyif  => "match password-auth/*[type='auth'][control='required'][module='pam_faillock.so'] size == 0",
+  }
+  #RHEL-06-000061, RHEL-06-000356, RHEL-06-000357
+  augeas { 'Set Deny For Failed Password Attempts':
+    # Available faillock guidance doesn't neatly drop into place on all systems
+    context => '/files/etc/pam.d',
+    changes => [
+      "ins 01 after password-auth/*[type='auth'][module='pam_unix.so']",
+      'set password-auth/01/type auth',
+      'set password-auth/01/control required',
+      'set password-auth/01/module pam_faillock.so',
+      'set password-auth/01/argument[1] authfail',
+      'set password-auth/01/argument[2] deny=3',
+      'set password-auth/01/argument[3] unlock_time=604800',
+      'set password-auth/01/argument[4] fail_interval=900',
+    ],
+    onlyif  => "match password-auth/*[type='auth'][control='required'][module='pam_faillock.so'] size == 0",
+  }
+  augeas { 'Set Deny For Failed Password Attempts die':
+    # Available faillock guidance doesn't neatly drop into place on all systems
+    context => '/files/etc/pam.d',
+    changes => [
+      "ins 01 after password-auth/*[type='auth'][module='pam_unix.so']",
+      'set password-auth/01/type auth',
+      'set password-auth/01/control [default=die]',
+      'set password-auth/01/module pam_faillock.so',
+      'set password-auth/01/argument[1] authfail',
+      'set password-auth/01/argument[2] deny=3',
+      'set password-auth/01/argument[3] unlock_time=604800',
+      'set password-auth/01/argument[4] fail_interval=900',
+    ],
+    onlyif  => "match password-auth/*[type='auth'][control='[default=die]'][module='pam_faillock.so'] size == 0",
   }
   #RHEL-06-000274
   augeas { 'Limit Password Reuse':
